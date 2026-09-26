@@ -6,6 +6,9 @@ from fastapi import FastAPI, Request
 import uvicorn
 import requests
 import re
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -217,8 +220,18 @@ Output strict JSON with keys:
 RULES:
 1. If the message reads like a canned automated response (e.g. "automated assistant", "our team will respond"): intent='auto_reply', action='end'
 2. If the merchant is angry, dismissive, or says stop (e.g. "spam", "stop"): intent='hostile', action='end'
-3. If the merchant agrees to the previous proposal (e.g. "do it", "yes", "update it", "go ahead"): intent='action_commitment', action='send'.
+3. If the merchant agrees to the previous proposal (e.g. "do it", "yes", "update it", "go ahead", "whats next"): intent='action_commitment', action='send'.
 4. If the merchant asks a question that requires a human: intent='question', action='wait', wait_seconds=3600.
+
+EXAMPLES:
+Message: "Stop messaging me. This is useless spam."
+JSON: {"intent": "hostile", "confidence": 0.99, "action": "end", "response_body": "", "wait_seconds": 0}
+
+Message: "Ok lets do it. Whats next?"
+JSON: {"intent": "action_commitment", "confidence": 0.99, "action": "send", "response_body": "Awesome! I have successfully initiated that for you.", "wait_seconds": 0}
+
+Message: "Thank you for contacting us! Our team will respond shortly."
+JSON: {"intent": "auto_reply", "confidence": 0.99, "action": "end", "response_body": "", "wait_seconds": 0}
 """
 
     prompt = f"Merchant Message: {message}\nMerchant Identity Data: {json.dumps(merchant_context.get('identity', {}))}"
